@@ -2,6 +2,7 @@ const User = require('../models/User')
 const port = process.env.PORT
 const { userSchema, authSchema } = require('../helpers/validationSchema')
 require('dotenv').config()
+const logger = require('../helpers/logger')
 
 // Create User
 const registerPost = async (req, res) => {
@@ -23,6 +24,7 @@ const registerPost = async (req, res) => {
   const emailExists = await User.findOne({ email: params.email })
   if (emailExists) {
     error_msg.push(`${params.email} is already taken`)
+    logger.error(error_msg)
     return res.status(404).json({ errors: error_msg })
   }
 
@@ -44,7 +46,7 @@ const registerPost = async (req, res) => {
     res.cookie('jwt', token, options) // set in milliseconds
     res.status(201).json({ user: user._id, token: token })
   } catch (err) {
-    console.log(err)
+    logger.error(err)
   }
 }
 
@@ -57,6 +59,7 @@ const loginPost = async (req, res) => {
 
   if (error) {
     error.details.map((err) => error_msg.push(err.message))
+    logger.error(error)
     return res.status(404).json({ errors: error_msg })
   }
 
@@ -80,15 +83,17 @@ const loginPost = async (req, res) => {
     }
 
     res.cookie('jwt', token, options)
+    logger.info(`user ${user.name} logged in`)
     res.status(200).json({ user: req.user, token })
   } catch (err) {
-    console.log(err)
+    logger.error(err)
   }
 }
 
 const logOut = (req, res) => {
   console.log(res.cookie)
   res.cookie('jwt', '', { expires: new Date() })
+  logger.info('logged out')
   res.status(200).json({ message: 'logged out' })
 }
 

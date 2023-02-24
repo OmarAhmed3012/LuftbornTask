@@ -1,6 +1,7 @@
 const Task = require('../models/Task')
 const { createTaskSchema } = require('../helpers/validationSchema')
 const moment = require('moment')
+const logger = require('../helpers/logger')
 
 // Create Task
 const createTask = async (req, res) => {
@@ -11,6 +12,7 @@ const createTask = async (req, res) => {
 
   if (error) {
     error.details.map((err) => error_msg.push(err.message))
+    logger.error(error_msg)
     return res.status(404).json({ errors: error_msg })
   }
 
@@ -33,7 +35,7 @@ const createTask = async (req, res) => {
 
     const task = new Task(data)
     await task.save()
-
+    logger.info('task saved')
     res.status(201).json({ task })
   } catch (e) {
     console.log(e)
@@ -52,14 +54,16 @@ const updateTask = async (req, res) => {
 
   if (error) {
     error.details.map((err) => error_msg.push(err.message))
+    logger.error(error_msg)
     return res.status(404).json({ errors: error_msg })
   }
 
   try {
     const newTask = await Task.findByIdAndUpdate(_id, params, { new: true })
+    logger.info('Task Updated')
     res.status(200).json({ newTask })
   } catch (e) {
-    console.log(e)
+    logger.error(e)
   }
 }
 
@@ -82,7 +86,7 @@ const getTasks = async (req, res) => {
 
     res.status(200).json({ tasks })
   } catch (e) {
-    console.log(e)
+    logger.error(e)
   }
 }
 
@@ -90,9 +94,10 @@ const deleteTask = async (req, res) => {
   const _id = req.params.id
   try {
     await Task.findByIdAndRemove(_id)
+    logger.info('task deleted')
     res.json({ message: 'Task Deleted' })
   } catch (e) {
-    console.log(e)
+    logger.error(e)
     res.json({ error: e })
   }
 }
